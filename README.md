@@ -6,4 +6,32 @@ The idea is to create a educational website that targets the computer science do
 - Pro's & Cons
 - Generated Exercises
 
+## Database Schemas
+Topic
+id: str
+name: str
+url: str
+source: str
+date_added: str
+date_created: str
+status: str
+exercises: list[str]
+relevance_score: int
+internal_relvance_score
+
+Exercises
+id: str
+question: str
+answer_choices: list[str]
+answer: str
+date_created: str
+
+User
+id: str
+completed_exercises: str
+topics_visited: str
+date_joined: str
+
 ## Sources
+1) https://praw.readthedocs.io/en/stable/
+2) https://developers.llamaindex.ai/python/framework/
