@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 import uuid
 from difflib import SequenceMatcher
 from dataclasses import dataclass, field
-from supabase_client import insert_topic
 
 # Helper Functions
 def parse_date(utc_timestamp: float) -> datetime:
@@ -13,6 +12,8 @@ def parse_date(utc_timestamp: float) -> datetime:
     
 def get_utc_timestamp() -> datetime:
     return datetime.now(timezone.utc)
+
+
 
 # Topic data class
 @dataclass(slots=True)
@@ -51,8 +52,8 @@ class Topic:
             "url": self.url,
             "source": self.source,
             "summary": self.summary,
-            "date_added": self.date_added,
-            "date_created": self.date_created,
+            "date_added": self.date_added.isoformat(),
+            "date_created": self.date_created.isoformat(),
             "is_active": self.is_active,
             "is_archived": self.is_archived,
             "exercises": self.exercises,

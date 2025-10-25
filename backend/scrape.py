@@ -106,6 +106,6 @@ def get_all_topics(source_limit: int = 10, exceptions: list[str] = ["reddit", 'g
     return all_topics
 
 def test_scrape():
-    topics = get_all_topics(source_limit=5)
+    topics = get_all_topics(source_limit=10)
     for topic in topics:
         print(topic.get_dict())
