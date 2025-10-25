@@ -2,7 +2,6 @@
 from supabase import create_client, Client
 import os
 from dotenv import load_dotenv
-#from topic import serialize_for_supabase
 from datetime import datetime
 
 load_dotenv()
@@ -12,28 +11,11 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-def serialize_for_supabase(data: dict) -> dict:
-    """Convert datetime objects to ISO strings or timestamps for Supabase."""
-    serialized = {}
-    for key, value in data.items():
-        if isinstance(value, datetime):
-            # Option 1: store ISO string
-            serialized[key] = value.isoformat()
 
-            # OR Option 2 (preferred for numeric sorting): store as UNIX timestamp
-            # serialized[key] = value.timestamp()
-        elif isinstance(value, list):
-            # Recursively handle nested lists
-            serialized[key] = [
-                v.isoformat() if isinstance(v, datetime) else v for v in value
-            ]
-        else:
-            serialized[key] = value
-    return serialized
 
 # Inserts a topic into the Supabase 'topics' table.
 def insert(table: str, topic_data: dict):
-    topic_data = serialize_for_supabase(topic_data)
+    #topic_data = serialize_for_supabase(topic_data)
     response = supabase.table(table).upsert(topic_data, on_conflict="id").execute()
     return response
 
@@ -60,6 +42,20 @@ def get_info_about_topic(id: str, *columns):
         select_str = ",".join(columns)
 
     response = supabase.table('topics').select("id", select_str).execute()
+    
 
 
     return response.data
+
+def find_topic_by_name(name: str):
+    #
+    # Search for a topic by name in the 'topics' table in Supabase.
+
+    # Args:
+    #     name: Name of the topic to search for.
+
+    # Returns:
+    #     List of matching topic dictionaries.
+    #
+    response = supabase.table("topics").select("name", "id").eq("name", name).execute()
+    return response.data[0]['id'] if response.data else None
