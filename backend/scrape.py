@@ -71,27 +71,33 @@ def get_reddit_posts(subreddit_name: str, limit: int, exceptions: list[str]) -> 
         valid, parsed_name = filter_post(topic=submission.title)
         if valid:
             summary_status, filtered_name, summary, pros, cons = parse_website_topic(url=submission.url, name=parsed_name)
-            if summary_status:
-                valid_name = True # Check that it is not in exceptions
-                for exception in exceptions:
-                    if exception.lower() in filtered_name.lower(): # type: ignore
-                        valid_name = False
-                if valid_name:
-                    topic = Topic(
-                        name=filtered_name, # type: ignore
-                        url=submission.url,
-                        summary=summary, # type: ignore
-                        date_added=get_utc_timestamp(),
-                        date_created=parse_date(submission.created_utc),
-                        source="reddit",
-                        is_archived=False, # Should always be false when first generated
-                        is_active=True,
-                        internal_relevance_score=0,
-                        relevance_score=0,
-                        exercises=[],
-                        pros=pros, # type: ignore
-                        cons=cons) # type: ignore
-                    topics.append(topic)
+            # Check filtered name is not already in database to prevent redundant production
+            in_database = False
+            if in_database == False:
+                if summary_status:
+                    valid_name = True # Check that it is not in exceptions
+                    for exception in exceptions:
+                        if exception.lower() in filtered_name.lower(): # type: ignore
+                            valid_name = False
+                    if valid_name:
+                        topic = Topic(
+                            name=filtered_name, # type: ignore
+                            url=submission.url,
+                            summary=summary, # type: ignore
+                            date_added=get_utc_timestamp(),
+                            date_created=parse_date(submission.created_utc),
+                            source="reddit",
+                            is_archived=False, # Should always be false when first generated
+                            is_active=True,
+                            internal_relevance_score=0,
+                            relevance_score=0,
+                            exercises=[],
+                            pros=pros, # type: ignore
+                            cons=cons) # type: ignore
+                        topics.append(topic)
+            else:
+                # Get item by id
+                # Update the internal_relevance_score
     return topics
 
 # Gets all filtered topics
