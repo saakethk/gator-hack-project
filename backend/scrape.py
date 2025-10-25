@@ -87,7 +87,7 @@ def get_reddit_posts(subreddit_name: str, limit: int, exceptions: list[str]) -> 
                         is_archived=False, # Should always be false when first generated
                         is_active=True,
                         internal_relevance_score=0,
-                        relevance_score=0,
+                        relevance_score= submission.score,
                         exercises=[],
                         pros=pros, # type: ignore
                         cons=cons) # type: ignore
