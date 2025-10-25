@@ -2,3 +2,5 @@ dotenv
 praw
 llama-index-llms-azure-openai
 llama-index
+supabase
+bs4
