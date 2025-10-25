@@ -19,7 +19,7 @@ def get_all_topics():
     response = supabase.table('topics').select('*').execute()
     return response.data
 
-def get_info_about_topic(*columns):
+def get_info_about_topic(id: str, *columns):
     #
     # Fetch specified columns from the 'topics' table in Supabase.
 
@@ -36,7 +36,7 @@ def get_info_about_topic(*columns):
         # Join column names with commas for Supabase select
         select_str = ",".join(columns)
 
-    response = supabase.table('topics').select(select_str).execute()
+    response = supabase.table('topics').select("id", select_str).execute()
 
 
     return response.data

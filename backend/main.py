@@ -161,5 +161,5 @@ def generate_mcqs_for_story(story, num = 3):
 # for subreddit in relevant_subreddits:
 #     get_reddit_posts(subreddit_name=subreddit, limit=10)
 
-# print(get_info_about_topic("name", "source", "relevance_score"))
+#print(get_info_about_topic("name", "source"))
 
