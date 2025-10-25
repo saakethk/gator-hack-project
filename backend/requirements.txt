@@ -1,2 +1,4 @@
 dotenv
 praw
+llama-index-llms-azure-openai
+llama-index
