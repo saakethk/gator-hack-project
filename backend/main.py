@@ -1,6 +1,6 @@
 
 # DEPENDENCIES
-from llama_index.llms.azure_openai import AzureOpenAI
+from llama_index.llms.azure_openai import AzureOpenAI # Causes pydantic warning
 from dotenv import load_dotenv
 import os
 import json
@@ -13,6 +13,12 @@ from bs4 import BeautifulSoup
 from supabase_client import *
 
 #from supabase import create_client, Client
+import json
+import json
+from topic import Topic, get_utc_timestamp, parse_date
+import requests
+from bs4 import BeautifulSoup
+import time
 
 load_dotenv()
 
@@ -35,7 +41,22 @@ REDDIT_CLIENT = praw.Reddit(
     user_agent="my_reddit_scraper/1.0 by u/Capital-Olive1823"
 )
 
+# For performance analysis
+def timer(func):
+    """
+    A decorator that measures the execution time of a function.
+    """
+    def wrapper(*args, **kwargs):
+        start_time = time.perf_counter()  # Record start time
+        result = func(*args, **kwargs)    # Execute the wrapped function
+        end_time = time.perf_counter()    # Record end time
+        execution_time = end_time - start_time
+        print(f"Function '{func.__name__}' executed in {execution_time:.4f} seconds.")
+        return result
+    return wrapper
+    
 # Ask llm to identify whether 
+@timer
 def filter_post(topic: str) -> tuple[bool, str]:
     response = NAVIGATOR_CLIENT.complete(
         prompt=f"The title of a post is {topic}. Your role is to identify whether this title contains a software technology or is irrelevant. " \
@@ -51,6 +72,7 @@ def filter_post(topic: str) -> tuple[bool, str]:
         return False, str(error)
     
 # Parse the url to make 
+@timer
 def prompt_about_url(prompt: str, url: str) -> str:
     context_response = requests.get(url)
     soup = BeautifulSoup(context_response.text, 'html.parser')
@@ -59,8 +81,21 @@ def prompt_about_url(prompt: str, url: str) -> str:
         prompt=f"Website context: {condensed_content}. Utilize the website content above for the provided prompt. Prompt: {prompt}")
     return str(response)
 
+# Parse the actual topic based on website context
+@timer
+def parse_website_topic(url: str, name: str):
+    summary_response = prompt_about_url(
+        prompt="Summarize the following website into a short 100-150 word summary, provide the name of the tool, and provide a list of pros and cons. " \
+        "Response should only contain JSON and look like:" \
+        "{\"name\": \"name goes here\", \"summary\": \"summary goes here\", \"pros\": [\"pros goes here\"], \"cons\": [\"cons goes here\"]}", 
+        url=url)
+    summary_parsed = json.loads(summary_response)
+    print(summary_parsed)
+    return summary_parsed["name"], summary_parsed["summary"], summary_parsed["pros"], summary_parsed["cons"]
+
 # Gets reddit posts
-def get_reddit_posts(subreddit_name: str, limit: int) -> list[Topic]:
+@timer
+def get_reddit_posts(subreddit_name: str, limit: int, exceptions: list[str]) -> list[Topic]:
     # Gets subreddit
     subreddit = REDDIT_CLIENT.subreddit(subreddit_name)
     # Fetch posts
@@ -68,36 +103,51 @@ def get_reddit_posts(subreddit_name: str, limit: int) -> list[Topic]:
     for submission in subreddit.rising(limit=limit):
         valid, parsed_name = filter_post(topic=submission.title)
         if valid:
-            topic = Topic(
-                name=parsed_name,
-                url=submission.url,
-                summary="",
-                date_added=get_utc_timestamp().timestamp(), # CONVERTING TO UNIX TIMESTAMP
-                date_created=parse_date(submission.created_utc).timestamp(), # CONVERTING TO UNIX TIMESTAMP
-                source="reddit",
-                is_archived=False, # Should always be false when first generated
-                is_active=True,
-                internal_relevance_score=0,
-                relevance_score=submission.score,
-                exercises=[])
-            insert_topic(topic_data=topic.get_dict())
-            topics.append(topic)
-        
+            filtered_name, summary, pros, cons = parse_website_topic(url=submission.url, name=parsed_name)
+            valid_name = True # Check that it is not in exceptions
+            for exception in exceptions:
+                if exception.lower() in filtered_name.lower():
+                    valid_name = False
+            if valid_name:
+                topic = Topic(
+                    name=filtered_name,
+                    url=submission.url,
+                    summary=summary,
+                    date_added=get_utc_timestamp(),
+                    date_created=parse_date(submission.created_utc),
+                    source="reddit",
+                    is_archived=False, # Should always be false when first generated
+                    is_active=True,
+                    internal_relevance_score=0,
+                    relevance_score=0,
+                    exercises=[],
+                    pros=pros,
+                    cons=cons)
+                topics.append(topic)
     return topics
 
-def get_all_topics(source_limit: int = 10) -> list[Topic]:
+@timer
+def get_all_topics(source_limit: int = 10, exceptions: list[str] = ["reddit", 'github']) -> list[Topic]:
     relevant_subreddits = ["programming", "coding", "learnprogramming", "creativecoding"]
     all_topics = []
     for subreddit in relevant_subreddits:
-        for item in get_reddit_posts(subreddit_name=subreddit, limit=source_limit):
+        for item in get_reddit_posts(subreddit_name=subreddit, limit=source_limit, exceptions=exceptions):
             if item not in all_topics:
                 all_topics.append(item)
     return all_topics
 
-# topics = get_all_topics(source_limit=5)
-# for topic in topics:S
-#     print(topic.url)
+topics = get_all_topics(source_limit=5)
+for topic in topics:
+    print(topic.get_dict())
 
+
+
+
+# 
+response = NAVIGATOR_CLIENT.complete(prompt="Come up with a word ladder starting with the word CAR, having 7 words in the sequence, and ending with a 8 letter word. Return a JSON response.")
+relevant_subreddits = ["programming", "coding", "learnprogramming", "creativecoding"]
+for subreddit in relevant_subreddits:
+    get_posts(subreddit_name=subreddit)
 
 def generate_mcqs_for_story(story, num = 3):
     prompt = f"""
@@ -155,11 +205,3 @@ def generate_mcqs_for_story(story, num = 3):
 
     except Exception as e:
         print(f"Error generating MCQs for {story.name}: {e}")
-
-
-#relevant_subreddits = ["programming", "coding", "learnprogramming", "creativecoding"]
-# for subreddit in relevant_subreddits:
-#     get_reddit_posts(subreddit_name=subreddit, limit=10)
-
-#print(get_info_about_topic("name", "source"))
-

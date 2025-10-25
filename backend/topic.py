@@ -29,6 +29,8 @@ class Topic:
     exercises: list[str] = field(default_factory=lambda: [])
     relevance_score: int = 0
     internal_relevance_score: int = 0
+    pros: list[str] = field(default_factory=lambda: [])
+    cons: list[str] = field(default_factory=lambda: [])
     
     def __eq__(self, other) -> bool:
         # Other param must be a story object
@@ -46,14 +48,16 @@ class Topic:
         return {
             "id": self.id,
             "name": self.name,
-            "summary": self.summary,
             "url": self.url,
             "source": self.source,
+            "summary": self.summary,
             "date_added": self.date_added,
             "date_created": self.date_created,
             "is_active": self.is_active,
             "is_archived": self.is_archived,
             "exercises": self.exercises,
             "relevance_score": self.relevance_score,
-            "internal_relevance_score": self.internal_relevance_score
+            "internal_relevance_score": self.internal_relevance_score,
+            "pros": self.pros,
+            "cons": self.cons
         }

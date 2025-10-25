@@ -11,10 +11,12 @@ Topic
 id: str
 name: str
 url: str
+summary: str
 source: str
 date_added: str
 date_created: str
-status: str
+is_active: bool,
+is_archived: bool,
 exercises: list[str]
 relevance_score: int
 internal_relvance_score
