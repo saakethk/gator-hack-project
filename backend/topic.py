@@ -47,6 +47,7 @@ class Topic:
             "name": self.name,
             "url": self.url,
             "source": self.source,
+            "summary": self.summary,
             "date_added": self.date_added,
             "date_created": self.date_created,
             "is_active": self.is_active,
