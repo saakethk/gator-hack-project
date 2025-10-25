@@ -1,12 +1,16 @@
 
 # DEPENDENCIES
-from llama_index.llms.azure_openai import AzureOpenAI
+from llama_index.llms.azure_openai import AzureOpenAI # Causes pydantic warning
 from dotenv import load_dotenv
 import os
 import praw
 from datetime import datetime, timezone
 import uuid
 import json
+import json
+from topic import Topic, get_utc_timestamp, parse_date
+import requests
+from bs4 import BeautifulSoup
 
 load_dotenv()
 
@@ -27,41 +31,70 @@ REDDIT_CLIENT = praw.Reddit(
     user_agent="my_reddit_scraper/1.0 by u/Capital-Olive1823"
 )
 
-# Story title
-class Story:
-    def __init__(self, name: str = "", url: str = "", source: str = "", 
-                 date_created: float = 0, status: str = "", exercises: list[str] = [], relevance_score: int = 0, 
-                 internal_relevance_score: int = 0):
-        self.id: str = str(uuid.uuid4())
-        self.name: str = name
-        self.url: str = url
-        self.source: str = source
-        self.date_added: datetime = self.get_utc_timestamp()
-        self.date_created: datetime = self.parse_date(date_created)
-        self.status: str = status
-        self.exercises: list[str] = exercises
-        self.relevance_score: int = relevance_score
-        self.internal_relvance_score: int = internal_relevance_score
-    def parse_date(self, utc_timestamp: float) -> datetime:
-        return datetime.fromtimestamp(utc_timestamp, tz=timezone.utc)
     
-    def get_utc_timestamp(self) -> float:
-        utc_now = datetime.now(timezone.utc)
-        return utc_now
+# Ask llm to identify whether 
+def filter_post(topic: str) -> tuple[bool, str]:
+    response = NAVIGATOR_CLIENT.complete(
+        prompt=f"The title of a post is {topic}. Your role is to identify whether this title contains a software technology or is irrelevant. " \
+        "Return a json response with the key 'relevant' which has true or false and extract just the name of the technology under the key 'name'. Response should only contain JSON and look like:" \
+        "{'relevant': false, 'name': 'python'}")
+    try:
+        response_parsed = json.loads(str(response))
+        if response_parsed["name"] != "" and response_parsed["name"] != None:
+            return response_parsed["relevant"], response_parsed["name"]
+        else:
+            return False, response_parsed["name"]
+    except Exception as error:
+        return False, str(error)
+    
+# Parse the url to make 
+def prompt_about_url(prompt: str, url: str) -> str:
+    context_response = requests.get(url)
+    soup = BeautifulSoup(context_response.text, 'html.parser')
+    condensed_content = " ".join(soup.text.split())
+    response = NAVIGATOR_CLIENT.complete(
+        prompt=f"Website context: {condensed_content}. Utilize the website content above for the provided prompt. Prompt: {prompt}")
+    return str(response)
 
 # Gets reddit posts
-def get_posts(subreddit_name: str):
+def get_reddit_posts(subreddit_name: str, limit: int) -> list[Topic]:
     # Gets subreddit
     subreddit = REDDIT_CLIENT.subreddit(subreddit_name)
     # Fetch posts
-    for submission in subreddit.rising(limit=100):
-        print(f"Title: {submission.title}")
-        print(f"Author: {submission.author}")
-        print(f"URL: {submission.url}")
-        print(f"Score: {submission.score}")
-        print(f"Created (UTC): {submission.created_utc}")
-        print(f"ID: {submission.id}")
-        print("-" * 80)
+    topics = []
+    for submission in subreddit.rising(limit=limit):
+        valid, parsed_name = filter_post(topic=submission.title)
+        if valid:
+            topic = Topic(
+                name=parsed_name,
+                url=submission.url,
+                summary="",
+                date_added=get_utc_timestamp(),
+                date_created=parse_date(submission.created_utc),
+                source="reddit",
+                is_archived=False, # Should always be false when first generated
+                is_active=True,
+                internal_relevance_score=0,
+                relevance_score=0,
+                exercises=[])
+            topics.append(topic)
+    return topics
+
+def get_all_topics(source_limit: int = 10) -> list[Topic]:
+    relevant_subreddits = ["programming", "coding", "learnprogramming", "creativecoding"]
+    all_topics = []
+    for subreddit in relevant_subreddits:
+        for item in get_reddit_posts(subreddit_name=subreddit, limit=source_limit):
+            if item not in all_topics:
+                all_topics.append(item)
+    return all_topics
+
+# topics = get_all_topics(source_limit=5)
+# for topic in topics:
+#     print(topic.url)
+
+print(prompt_about_url("Summarize the web page", "https://github.com/Old-Farmer/Mango-Editor"))
+
 
 # 
 response = NAVIGATOR_CLIENT.complete(prompt="Come up with a word ladder starting with the word CAR, having 7 words in the sequence, and ending with a 8 letter word. Return a JSON response.")
