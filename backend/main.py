@@ -10,7 +10,7 @@ import uuid
 from topic import Topic, get_utc_timestamp, parse_date
 import requests
 from bs4 import BeautifulSoup
-from supabase_client import insert_topic
+from supabase_client import *
 
 #from supabase import create_client, Client
 
@@ -157,6 +157,9 @@ def generate_mcqs_for_story(story, num = 3):
         print(f"Error generating MCQs for {story.name}: {e}")
 
 
-relevant_subreddits = ["programming", "coding", "learnprogramming", "creativecoding"]
-for subreddit in relevant_subreddits:
-    get_reddit_posts(subreddit_name=subreddit, limit=10)
+#relevant_subreddits = ["programming", "coding", "learnprogramming", "creativecoding"]
+# for subreddit in relevant_subreddits:
+#     get_reddit_posts(subreddit_name=subreddit, limit=10)
+
+# print(get_info_about_topic("name", "source", "relevance_score"))
+
