@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concept Info</title>
+  <link rel="stylesheet" href="main.css" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Jersey+10&display=swap');
+  </style>
+</head>
+<body class="jersey-10-regular">
+  <header>
+    <h1 class="jersey-10-title">Concept Name</h1>
+  </header>
+
+  <main>
+    <!-- Summary -->
+    <h1>Summary:</h1>
+    <h3 id="summary"></h3>
+
+    <!-- Pros & Cons -->
+    <section id="pros-cons">
+      <div class="pros">
+        <h2>Pros</h2>
+        <ul id="pros-list"></ul>
+      </div>
+      <div class="cons">
+        <h2>Cons</h2>
+        <ul id="cons-list"></ul>
+      </div>
+    </section>
+
+    <section id="quiz">
+      <h2>Practice Questions</h2>
+      <form id="mcq-form">
+        <button class="jersey-10-title" id="submit-answer" type="button">Submit</button>
+        <p id="feedback"></p>
+      </form>
+    </section>
+
+<!-- Chatbot Toggle Button -->
+<button class="jersey-10-title" id="back-btn">← Back</button>
+<button id="chat-toggle" class="jersey-10-title">Confused? Our Chatbot has got you covered!</button>
+
+<!-- Chatbot Popup -->
+<div id="chat-popup" class="hidden">
+  <div class="chat-container">
+    <div class="chat-header">
+      <span>Chatbot</span>
+    </div>
+    <div id="chat-window"></div>
+    <div class="input-area">
+      <input type="text" id="user-input" placeholder="Type your message..." class="jersey-10-regular"/>
+      <button id="send-btn" class="jersey-10-title">Send</button>
+    </div>
+  </div>
+</div>
+    <!-- Back button -->
+  </main>
+
+  <script src="info.js"></script>
+</body>
+</html>
