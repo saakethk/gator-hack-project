@@ -73,12 +73,13 @@ def prompt_about_url(prompt: str, url: str) -> str:
 @timer
 def parse_website_topic(url: str, name: str):
     summary_response = prompt_about_url(
-        prompt="Summarize the following website into a short 100-150 word summary and then provide the name of the tool. " \
+        prompt="Summarize the following website into a short 100-150 word summary, provide the name of the tool, and provide a list of pros and cons. " \
         "Response should only contain JSON and look like:" \
-        "{\"name\": \"name goes here\", \"summary\": \"summary goes here\"}", 
+        "{\"name\": \"name goes here\", \"summary\": \"summary goes here\", \"pros\": [\"pros goes here\"], \"cons\": [\"cons goes here\"]}", 
         url=url)
     summary_parsed = json.loads(summary_response)
-    return summary_parsed["name"], summary_parsed["summary"]
+    print(summary_parsed)
+    return summary_parsed["name"], summary_parsed["summary"], summary_parsed["pros"], summary_parsed["cons"]
 
 # Gets reddit posts
 @timer
@@ -90,7 +91,7 @@ def get_reddit_posts(subreddit_name: str, limit: int, exceptions: list[str]) -> 
     for submission in subreddit.rising(limit=limit):
         valid, parsed_name = filter_post(topic=submission.title)
         if valid:
-            filtered_name, summary = parse_website_topic(url=submission.url, name=parsed_name)
+            filtered_name, summary, pros, cons = parse_website_topic(url=submission.url, name=parsed_name)
             valid_name = True # Check that it is not in exceptions
             for exception in exceptions:
                 if exception.lower() in filtered_name.lower():
@@ -107,7 +108,9 @@ def get_reddit_posts(subreddit_name: str, limit: int, exceptions: list[str]) -> 
                     is_active=True,
                     internal_relevance_score=0,
                     relevance_score=0,
-                    exercises=[])
+                    exercises=[],
+                    pros=pros,
+                    cons=cons)
                 topics.append(topic)
     return topics
 
@@ -121,9 +124,9 @@ def get_all_topics(source_limit: int = 10, exceptions: list[str] = ["reddit", 'g
                 all_topics.append(item)
     return all_topics
 
-topics = get_all_topics(source_limit=1)
+topics = get_all_topics(source_limit=5)
 for topic in topics:
-    print(topic.name)
+    print(topic.get_dict())
 
 
 
