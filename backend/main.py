@@ -28,5 +28,3 @@ for submission in subreddit.hot(limit=100):  # limit=None will stream indefinite
     print(f"Created (UTC): {submission.created_utc}")
     print(f"ID: {submission.id}")
     print("-" * 80)
-
-# sai-branch comment test
