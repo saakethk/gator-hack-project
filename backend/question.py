@@ -26,7 +26,7 @@ def get_url_content(url:str):
        return ""
 
 #generates 1 mcq per topic in topics
-def generate_mcqs_for_story(topic: Topic, num = 3):
+def generate_mcqs_for_story(topic: Topic, num: int = 3):
 
    print(f"Fetching content from: {topic.url}")
    url_content = get_url_content(topic.url)
