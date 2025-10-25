@@ -7,10 +7,10 @@ import praw
 from datetime import datetime, timezone
 import uuid
 import json
-import json
 from topic import Topic, get_utc_timestamp, parse_date
 import requests
 from bs4 import BeautifulSoup
+from exercise import Exercise
 
 load_dotenv()
 
@@ -89,20 +89,51 @@ def get_all_topics(source_limit: int = 10) -> list[Topic]:
                 all_topics.append(item)
     return all_topics
 
-# topics = get_all_topics(source_limit=5)
-# for topic in topics:
-#     print(topic.url)
+#fetches url content without ai stuff
+def get_url_content(url:str):
+    try:
+        response = requests.get(url, timeout = 10)
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        for script in soup(["script", "style"]):
+            script.decompose()
+
+        text = soup.get_text()
+        lines = (line.strip() for line in text.splitlines())
+        chunks = (phrase.strip() for line in lines for phrase in line.split(("  ")))
+        condensed_content = ' '.join(chunk for chunk in chunks if chunk)
+
+        return condensed_content
+    except Exception as e:
+        print(f"Error fetching URL content: {e}")
+        return ""
+
 
 print(prompt_about_url("Summarize the web page", "https://github.com/Old-Farmer/Mango-Editor"))
 
 
 # 
-response = NAVIGATOR_CLIENT.complete(prompt="Come up with a word ladder starting with the word CAR, having 7 words in the sequence, and ending with a 8 letter word. Return a JSON response.")
-relevant_subreddits = ["programming", "coding", "learnprogramming", "creativecoding"]
-for subreddit in relevant_subreddits:
-    get_posts(subreddit_name=subreddit)
+# response = NAVIGATOR_CLIENT.complete(prompt="Come up with a word ladder starting with the word CAR, having 7 words in the sequence, and ending with a 8 letter word. Return a JSON response.")
+# relevant_subreddits = ["programming", "coding", "learnprogramming", "creativecoding"]
+# for subreddit in relevant_subreddits:
+#     get_reddit_posts(subreddit_name=subreddit, limit )
 
-def generate_mcqs_for_story(story, num = 3):
+#generates 1 mcq per topic in topics
+def generate_mcqs_for_story(topic: Topic, num = 3):
+
+    print(f"Fetching content from: {topic.url}")
+    url_content = get_url_content(topic.url)
+
+    if not url_content:
+        print(f"Could not fetch content from URL, skipping MCQ generation")
+        return []
+
+    max_content_length = 3000
+    if len(url_content) > max_content_length:
+        url_content = url_content[:max_content_length] + "..."
+        print(f"Content truncated to {max_content_length} characters")
+
+
     prompt = f"""
     Act as a college professor creating an application for a 
     computer science learning platform, who specializes in 
@@ -117,8 +148,11 @@ def generate_mcqs_for_story(story, num = 3):
     Step 2: Based on your understanding of this topic, as a college professor who can easily explain complex subjects, come up with a fundamental easy question that can be asked to the user utilizing the consequent requirements.
     Step 3: Create {num} multiple choice questions about the following topic with the requirements that will follow in mind.
 
-    Topic: {story.name}
-    URL: {story.url}
+    Topic: {topic.name}
+    URL: {topic.url}
+    
+    Webpage Content (summarized for context):
+    {url_content}
     
     REQUIREMENTS:
     - Questions should be EASY and test surface-level understanding
@@ -145,16 +179,43 @@ def generate_mcqs_for_story(story, num = 3):
         ]
     }}
     
-    Generate {num} questions now.
+    Generate {num} questions now based on the scraped content provided.
     """
 
     try:
         response = NAVIGATOR_CLIENT.complete(prompt=prompt)
 
-        ai_response = json.loads(response.text.strip())
+        cleaned = response.text.strip()
+        cleaned = cleaned.replace("```json", "").replace("```", "").strip()
+        ai_response = json.loads(cleaned)
 
         exercises = []
+        for question_data in ai_response["questions"]:
+            exercise = Exercise(
+                question=question_data["question"],
+                answer_choices=question_data["choices"],
+                answer=question_data["correct_answer"]
+            )
+            exercises.append(exercise)
+            topic.exercises.append(exercise.id)
 
+        return exercises
 
     except Exception as e:
-        print(f"Error generating MCQs for {story.name}: {e}")
+        return []
+
+if __name__ == "__main__":
+    topics = get_all_topics(source_limit=2)
+
+    for topic in topics:
+        exercises = generate_mcqs_for_story(topic, num=1)
+
+        if exercises:
+            exercise = exercises[0]
+            print(f"✓ QUESTION GENERATED:")
+            print(f"Q: {exercise.question}")
+            for choice in exercise.answer_choices:
+                print(f"  {choice}")
+            print(f"Correct Answer: {exercise.answer}")
+        else:
+            print("✗ Failed to generate MCQ for this topic")
