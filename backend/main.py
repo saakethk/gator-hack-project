@@ -5,7 +5,7 @@ from supabase_client import *
 
 def create_pipeline():
     # Runs whole pipelin
-    topics = get_all_topics(source_limit=1)
+    topics = get_all_topics(source_limit=2)
     # Generates questions for topics
     for topic in topics:
         exercises = generate_mcqs_for_story(topic, num=1)
@@ -16,5 +16,6 @@ def create_pipeline():
         dict_topic = topic.get_dict()
         insert("topics", dict_topic)
         print(dict_topic)
+
 
 create_pipeline()

@@ -98,10 +98,16 @@ def generate_mcqs_for_story(topic: Topic, num: int = 3):
 
        exercises = []
        for question_data in ai_response["questions"]:
+           answer_index = 0
+           for choice in question_data["choices"]:
+               if question_data["correct_answer"] == choice[:1]:
+                   break
+               answer_index += 1
+           print(answer_index)
            exercise = Exercise(
                question=question_data["question"],
                answer_choices=question_data["choices"],
-               answer=question_data["correct_answer"]
+               answer=answer_index
            )
            exercises.append(exercise)
            topic.exercises.append(exercise.id)
