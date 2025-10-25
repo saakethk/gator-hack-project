@@ -37,3 +37,4 @@ date_joined: str
 ## Sources
 1) https://praw.readthedocs.io/en/stable/
 2) https://developers.llamaindex.ai/python/framework/
+3) https://supabase.com/docs/reference/python/installing
