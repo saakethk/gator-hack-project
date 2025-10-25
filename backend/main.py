@@ -20,4 +20,4 @@ def create_pipeline():
         print(dict_topic)
 
 
-#create_pipeline()
+create_pipeline()
