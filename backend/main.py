@@ -3,9 +3,16 @@
 from llama_index.llms.azure_openai import AzureOpenAI # Causes pydantic warning
 from dotenv import load_dotenv
 import os
+import json
 import praw
 from datetime import datetime, timezone
 import uuid
+from topic import Topic, get_utc_timestamp, parse_date
+import requests
+from bs4 import BeautifulSoup
+from supabase_client import *
+
+#from supabase import create_client, Client
 import json
 import json
 from topic import Topic, get_utc_timestamp, parse_date
@@ -14,6 +21,8 @@ from bs4 import BeautifulSoup
 import time
 
 load_dotenv()
+
+
 
 # Authenticate with API
 NAVIGATOR_AI_KEY = os.getenv("NAVIGATOR_AI_TOOLKIT")

@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import uuid
 from difflib import SequenceMatcher
 from dataclasses import dataclass, field
+from supabase_client import insert_topic
 
 # Helper Functions
 def parse_date(utc_timestamp: float) -> datetime:
@@ -18,7 +19,7 @@ def get_utc_timestamp() -> datetime:
 class Topic:
     date_added: datetime
     date_created: datetime
-    id: str = str(uuid.uuid4())
+    id: str = field(default_factory=lambda: str(uuid.uuid4()))
     name: str = ""
     summary: str = ""
     url: str = ""
