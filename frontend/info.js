@@ -2,6 +2,7 @@
 const params = new URLSearchParams(window.location.search);
 const conceptName = params.get("name");
 
+const memory = [];
 
 document.getElementById("back-btn").addEventListener("click", () => {
   window.location.href = "main.html"; // adjust to your actual main page
@@ -128,11 +129,10 @@ userInput.addEventListener("keypress", (e) => {
 function sendMessage() {
   const message = userInput.value.trim();
   if (!message) return;
-
   appendMessage("user", message);
   userInput.value = "";
   setTimeout(() => {
-    const botReply = generateBotReply(message);
+    const botReply = generateBotReply(message, memory, conceptName);
     appendMessage("bot", botReply);
   }, 500);
 }
@@ -145,8 +145,27 @@ function appendMessage(sender, text) {
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-function generateBotReply(userMsg) {
-    if(None){
-        return `You said: "${userMsg}"`;
-    }
+async function generateBotReply(userMsg, memoryArray, topic) {
+  try {
+    const res = await fetch("YOUR_API_ENDPOINT", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: userMsg,
+        memory: memoryArray,
+        topic: topic
+      })
+    });
+
+    if (!res.ok) throw new Error("Network error");
+
+    const reply = await res.json();
+    memory.push(userMsg, reply)
+    return reply; 
+  } catch (err) {
+    console.error("Error fetching chatbot response:", err);
+    return "Sorry, something went wrong.";
+  }
 }
