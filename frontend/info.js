@@ -4,8 +4,6 @@ const conceptId = params.get("id");
 const topicName = params.get("name");
 
 const memory = [];
-let exerciseDataArray = [];
-
 const recommenders = document.getElementById("similar");
 
 // --- Back Button ---
@@ -32,9 +30,7 @@ async function fetchExerciseData(topicId) {
       headers: { "Content-Type": "application/json" }
     });
     if (!res.ok) throw new Error("Network error");
-    const data = await res.json();
-    exerciseDataArray = data;
-    return data;
+    return await res.json();
   } catch (err) {
     console.error("Error fetching exercise data:", err);
     return null;
@@ -136,7 +132,10 @@ function renderRecData(rec) {
 
 // --- Main Flow ---
 (async () => {
-  if (!conceptId) return;
+  if (!conceptId) {
+    document.body.innerHTML = "<p>Missing concept ID in URL.</p>";
+    return;
+  }
 
   const conceptData = await fetchConceptData(conceptId);
   if (conceptData) renderConceptDetails(conceptData);
@@ -158,18 +157,22 @@ const chatPopup = document.getElementById("chat-popup");
 
 chatToggle.addEventListener("click", () => {
   const isVisible = chatPopup.classList.contains("visible");
-  chatPopup.classList.toggle("visible", !isVisible);
-  chatPopup.classList.toggle("hidden", isVisible);
-  chatToggle.textContent = isVisible
-    ? "Confused? Our Chatbot has got you covered!"
-    : "Exit Chatbot";
+
+  if (isVisible) {
+    chatPopup.classList.remove("visible");
+    chatPopup.classList.add("hidden");
+    chatToggle.textContent = "Confused? Our Chatbot has got you covered!";
+  } else {
+    chatPopup.classList.remove("hidden");
+    chatPopup.classList.add("visible");
+    chatToggle.textContent = "Exit Chatbot";
+  }
 });
 
 // --- Chatbot Messaging ---
 const chatWindow = document.getElementById("chat-window");
 const userInput = document.getElementById("user-input");
 const sendBtn = document.getElementById("send-btn");
-const loadingIndicator = document.getElementById("loading-indicator");
 
 sendBtn.addEventListener("click", sendMessage);
 userInput.addEventListener("keypress", (e) => {
@@ -183,15 +186,11 @@ async function sendMessage() {
   appendMessage("user", message);
   userInput.value = "";
 
-  loadingIndicator.style.display = "block";
-
   try {
     const botReply = await generateBotReply(message, memory, topicName);
     appendMessage("bot", botReply);
   } catch (err) {
     appendMessage("bot", "Sorry, something went wrong.");
-  } finally {
-    loadingIndicator.style.display = "none";
   }
 }
 
