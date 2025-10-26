@@ -39,3 +39,28 @@ def update_topic(id: str, column: str, value):
     # Update a topic in the 'topics' table in Supabase.
     response = SUPABASE_CLIENT.table("topics").update({column: value}).eq("id", id).execute()
     return response
+
+
+# Supabase Authentication Functions
+
+def sign_up(email: str, password: str):
+    auth_response = SUPABASE_CLIENT.auth.sign_up({
+        "email": email,
+        "password": password
+    })
+    return auth_response
+
+def sign_in(email: str, password: str):
+    auth_response = SUPABASE_CLIENT.auth.sign_in({
+        "email": email,
+        "password": password
+    })
+    return auth_response
+
+def sign_out():
+    auth_response = SUPABASE_CLIENT.auth.sign_out()
+    return auth_response
+
+def get_current_user():
+    user = SUPABASE_CLIENT.auth.get_user()
+    return user
