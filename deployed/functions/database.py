@@ -35,6 +35,22 @@ def find_topic_by_name(name: str):
     else:
         return False, None
     
+def find_topic_by_id(id: str):
+    # Search for a topic by id in the 'topics' table in Supabase.
+    response = SUPABASE_CLIENT.table("topics").select("id", "*").eq("id", id).execute()
+    if response.data:
+        return True, response.data[0] # type: ignore
+    else:
+        return False, None
+    
+def find_exercise_by_id(id: str):
+    # Search for a topic by id in the 'topics' table in Supabase.
+    response = SUPABASE_CLIENT.table("exercise").select("id", "*").eq("id", id).execute()
+    if response.data:
+        return True, response.data[0] # type: ignore
+    else:
+        return False, None
+    
 def update_topic(id: str, column: str, value):
     # Update a topic in the 'topics' table in Supabase.
     response = SUPABASE_CLIENT.table("topics").update({column: value}).eq("id", id).execute()
@@ -49,7 +65,6 @@ def get_sorted_topics(limit: int, offset: int):
     # Get topics sorted by relevance score in descending order with pagination.
     response = SUPABASE_CLIENT.table("topics").select("id", "name", "internal_relevance_score", "relevance_score", "date_added").order("internal_relevance_score", desc=True).order("relevance_score", desc=True).order("date_added", desc=True).limit(limit).offset(offset).execute()
     return response.data
-
 
 # Supabase Authentication Functions
 
@@ -75,3 +90,4 @@ def get_current_user():
     user = SUPABASE_CLIENT.auth.get_user()
     return user
 
+print(get_all_topics_from_supabase())
