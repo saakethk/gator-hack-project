@@ -36,6 +36,7 @@ h1 {
   color: green;
 }
 
+
 .cons {
   color: red;
 }
@@ -113,7 +114,17 @@ h1 {
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.3s ease;
 }
-
+.multi-line-button{
+    width: 50%; 
+  white-space: normal;
+  padding: 10px;
+  text-align: center;
+}
+.concept-btn{
+  display: block;
+  margin: auto;
+  margin-top: 15px;
+}
 .concept:hover {
   transform: translateY(-3px);
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);

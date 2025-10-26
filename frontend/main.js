@@ -2,62 +2,78 @@ const topic = document.getElementById("concepts");
 const moreButton = document.getElementById("more");
 
 let allData = [];
-let visibleCount = 15; 
-async function fetchDataAndSort() {
+const limit = 15;
+let offset = 0; // start at 0
+
+async function fetchDataAndSort(limit, offset) {
   try {
-    const response = await fetch("YOUR_API_ENDPOINT");
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    const res = await fetch(
+      `https://fetch-supabase-topics-xvt4z5lyxa-uc.a.run.app?limit=${limit}&offset=${offset}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }
+      }
+    );
+    if (!res.ok) throw new Error("Network error");
+    const data = await res.json();
+    allData.push(...data); // append properly
+        // 👇 Decide whether to show/hide the More button
+    if (data.length < limit) {
+      // fewer than limit means no more data
+      moreButton.style.display = "none";
+    } else {
+      moreButton.style.display = "block";
     }
-    const data = await response.json();
-    console.log(data);
-    allData = data; // store globally
+    console.log(data)
     return data;
-  } catch (error) {
-    console.error("Error fetching data:", error);
+  } catch (err) {
+    console.error("Error fetching topics:", err);
     return null;
   }
 }
 
-const displayConcepts = (data, limit = data.length) => {
-  topic.innerHTML = ""; // clear old content
-  data.slice(0, limit).forEach((indiv, index) => {
-    const { name, internal_relevance_score, relevance_score, is_archived } = indiv;
-    if (is_archived) return;
+const displayConcepts = (data) => {
+  data.forEach((indiv) => {
+    const { id, name, internal_relevance_score, relevance_score, date_added } = indiv;
 
     const btn = document.createElement("button");
-    btn.className = "jersey-10-title concept-btn"; // use class instead of id
+    btn.className = "jersey-10-title concept-btn multi-line-button";
+    const date = date_added ? date_added.slice(0, 10) : "";
 
-    if (internal_relevance_score >= 66) {
-      btn.style.backgroundColor = "#FF7900";
-      btn.textContent = `${name}: Relevance: ${relevance_score} Trending 🔥`;
-    } else if (internal_relevance_score >= 33) {
-      btn.style.backgroundColor = "#9dc183";
-      btn.textContent = `${name}: Relevance: ${relevance_score} Good 😊`;
+    if (internal_relevance_score >= 5) {
+      btn.style.borderColor = "#ffa657ff";
+      btn.innerHTML = `${name}:<br> Trending 🔥 ${date}`;
+    } else if (internal_relevance_score >= 0) {
+      btn.style.borderColor = "#9dc183";
+      btn.style.backgroundColor = "#eafbe3ff"
+      btn.innerHTML = `${name}:<br> Good 😊 ${date}`;
     } else {
-      btn.style.color = "#000000";
-      btn.style.backgroundColor = "#90d5ff";
-      btn.textContent = `${name}: Relevance: ${relevance_score} Not relavent 😐`;
+      btn.style.borderColor = "#90d5ff";
+      btn.style.backgroundColor = "#F0F8FF"
+      btn.innerHTML = `${name}:<br> Not relevant 😐 ${date}`;
     }
 
-btn.addEventListener("click", () => {
-  window.location.href = `info.html?name=${encodeURIComponent(name)}`;
-});
+    btn.addEventListener("click", () => {
+      window.location.href = `info.html?id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}`;
+    });
 
     topic.appendChild(btn);
   });
-
-  moreButton.style.display = data.length > limit ? "block" : "none";
 };
 
+// --- Initial load ---
 (async () => {
-  const newData = await fetchDataAndSort();
+  const newData = await fetchDataAndSort(limit, offset);
   if (newData) {
-    displayConcepts(newData, visibleCount);
+    displayConcepts(newData);
   }
 })();
 
-moreButton.addEventListener("click", () => {
-  visibleCount += 15;
-  displayConcepts(allData, visibleCount);
+// --- Load more ---
+moreButton.addEventListener("click", async () => {
+  offset += limit;
+  const moreData = await fetchDataAndSort(limit, offset);
+  if (moreData) {
+    displayConcepts(moreData);
+  }
 });

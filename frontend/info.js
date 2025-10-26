@@ -1,19 +1,24 @@
-
+// --- Grab topic_id from URL ---
 const params = new URLSearchParams(window.location.search);
-const conceptName = params.get("name");
+const conceptId = params.get("id"); // URL should be info.html?id=123
+const topicName = params.get("name");
 
 const memory = [];
+let exerciseDataArray = [];
 
+// --- Back button ---
 document.getElementById("back-btn").addEventListener("click", () => {
-  window.location.href = "main.html"; // adjust to your actual main page
+  window.location.href = "main.html";
 });
 
-
-async function fetchConceptData(name) {
+// --- Fetch concept data ---
+async function fetchConceptData(topicId) {
   try {
-    const res = await fetch(`YOUR_API_ENDPOINT?name=${encodeURIComponent(name)}`);
-    if (!res.ok) throw new Error("Network error");
-    const data = await res.json();
+    const res1 = await fetch(
+      `https://fetch-supabase-topic-full-xvt4z5lyxa-uc.a.run.app?topic_id=${topicId}`
+    );
+    if (!res1.ok) throw new Error("Network error");
+    const data = await res1.json(); // parse JSON
     return data;
   } catch (err) {
     console.error("Error fetching concept data:", err);
@@ -21,8 +26,27 @@ async function fetchConceptData(name) {
   }
 }
 
+async function fetchExerciseData(topicId){
+  try {
+    const res2 = await fetch(`https://fetch-supabase-exercise-full-xvt4z5lyxa-uc.a.run.app?topic_id=${encodeURIComponent(topicId)}`,
+      { 
+        method: "GET",
+       headers: {"Content-Type": "application/json"}
+      }
+    );
+    if (!res2.ok) throw new Error("Network error");
+    const exerciseData = await res2.json();
+    exerciseDataArray = exerciseData;
+    return exerciseData;
+  } catch (err) {
+    console.error("Error fetching concept data:", err);
+    return null;
+  }
+}
+
+// --- Render concept details ---
 function renderConceptDetails(data) {
-  document.querySelector("h1.jersey-10-title").textContent = data.name || conceptName;
+  document.querySelector("h1.jersey-10-title").textContent = data.name || conceptId;
   document.getElementById("summary").textContent = data.summary || "No summary available.";
 
   document.getElementById("pros-list").innerHTML = Array.isArray(data.pros)
@@ -34,15 +58,11 @@ function renderConceptDetails(data) {
     : "";
 }
 
+// --- Render quiz ---
 function renderQuiz(questions) {
   const form = document.getElementById("mcq-form");
   const submitBtn = document.getElementById("submit-answer");
   const feedback = document.getElementById("feedback");
-
-  if (!questions || questions.length === 0) {
-    document.getElementById("quiz").style.display = "none";
-    return;
-  }
 
   questions.forEach((q, index) => {
     const block = document.createElement("div");
@@ -52,22 +72,23 @@ function renderQuiz(questions) {
     p.textContent = q.question;
     block.appendChild(p);
 
-    q.options.forEach((opt, i) => {
-      const letter = String.fromCharCode(65 + i); 
+    q.answer_choices.forEach((opt, i) => {
+      const letter = String.fromCharCode(65 + i);
       const label = document.createElement("label");
-      label.innerHTML = `<input type="radio" name="answer${index}" value="${letter}"> ${opt}`;
+      label.innerHTML = `<input type="radio" name="answer${index}" value="${i}"> ${opt}`;
       block.appendChild(label);
       block.appendChild(document.createElement("br"));
+      i = i+1
     });
 
     form.insertBefore(block, submitBtn);
   });
-
+ 
   submitBtn.addEventListener("click", () => {
     let score = 0;
     questions.forEach((q, index) => {
       const selected = document.querySelector(`input[name="answer${index}"]:checked`);
-      if (selected && selected.value === q.correct) {
+      if (Number(selected.value) === q.answer){
         score++;
       }
     });
@@ -88,19 +109,19 @@ function renderQuiz(questions) {
 
 // --- Main flow ---
 (async () => {
-  if (!conceptName) return;
-
-  const data = await fetchConceptData(conceptName);
-  if (!data) return;
-
-  renderConceptDetails(data);
-
-  if (data.questions && data.questions.length > 0) {
-    renderQuiz(data.questions);
+  if (!conceptId) return;
+  const conceptData = await fetchConceptData(conceptId);
+  renderConceptDetails(conceptData);
+  const data = await fetchExerciseData(conceptId)
+  console.log(data)
+  if (data.length > 0) {
+    renderQuiz(data);
   } else {
     document.getElementById("quiz").style.display = "none";
   }
 })();
+
+// --- Chatbot toggle ---
 const chatToggle = document.getElementById("chat-toggle");
 const chatPopup = document.getElementById("chat-popup");
 
@@ -117,6 +138,8 @@ chatToggle.addEventListener("click", () => {
     chatToggle.textContent = "Exit Chatbot";
   }
 });
+
+// --- Chatbot messaging ---
 const chatWindow = document.getElementById("chat-window");
 const userInput = document.getElementById("user-input");
 const sendBtn = document.getElementById("send-btn");
@@ -126,13 +149,15 @@ userInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendMessage();
 });
 
-function sendMessage() {
+async function sendMessage() {
   const message = userInput.value.trim();
   if (!message) return;
+
   appendMessage("user", message);
   userInput.value = "";
-  setTimeout(() => {
-    const botReply = generateBotReply(message, memory, conceptName);
+
+  setTimeout(async () => {
+    const botReply = await generateBotReply(message, memory, topicName);
     appendMessage("bot", botReply);
   }, 500);
 }
@@ -147,23 +172,23 @@ function appendMessage(sender, text) {
 
 async function generateBotReply(userMsg, memoryArray, topic) {
   try {
-    const res = await fetch("YOUR_API_ENDPOINT", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: userMsg,
-        memory: memoryArray,
-        topic: topic
-      })
-    });
+    const res = await fetch(
+      `https://chat-request-xvt4z5lyxa-uc.a.run.app/?query=${encodeURIComponent(userMsg)}&history=${encodeURIComponent(JSON.stringify(memoryArray))}&topic=${encodeURIComponent(topic)}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }
+      }
+    );
 
     if (!res.ok) throw new Error("Network error");
 
-    const reply = await res.json();
-    memory.push(userMsg, reply)
-    return reply; 
+    const data = await res.text();
+    const reply = data || "No reply received.";
+
+    memoryArray.push({ role: "user", content: userMsg });
+    memoryArray.push({ role: "bot", content: reply });
+
+    return reply;
   } catch (err) {
     console.error("Error fetching chatbot response:", err);
     return "Sorry, something went wrong.";
