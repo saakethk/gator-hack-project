@@ -8,7 +8,7 @@ let exerciseDataArray = [];
 
 // --- Back button ---
 document.getElementById("back-btn").addEventListener("click", () => {
-  window.location.href = "main.html";
+  window.location.href = "index.html";
 });
 
 // --- Fetch concept data ---
@@ -25,7 +25,7 @@ async function fetchConceptData(topicId) {
     return null;
   }
 }
-
+ // fetch exercise data
 async function fetchExerciseData(topicId){
   try {
     const res2 = await fetch(`https://fetch-supabase-exercise-full-xvt4z5lyxa-uc.a.run.app?topic_id=${encodeURIComponent(topicId)}`,
@@ -41,6 +41,12 @@ async function fetchExerciseData(topicId){
   } catch (err) {
     console.error("Error fetching concept data:", err);
     return null;
+  }
+}
+
+async function fetchSimilarTopics(topicId){
+  try{
+
   }
 }
 
