@@ -9,8 +9,6 @@ def create_pipeline():
     # Generates questions for topics
     for topic in topics:
         exercises = generate_mcqs_for_story(topic, num=1)
-
-
         for exercise in exercises:
             exercise_dict = exercise.to_dict()
             insert("generated_questions", exercise_dict)
