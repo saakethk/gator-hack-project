@@ -161,11 +161,11 @@ chatToggle.addEventListener("click", () => {
   if (isVisible) {
     chatPopup.classList.remove("visible");
     chatPopup.classList.add("hidden");
-    chatToggle.textContent = "Confused? Our Chatbot has got you covered!";
+    chatToggle.textContent = "Confused? Grasp has got you covered!";
   } else {
     chatPopup.classList.remove("hidden");
     chatPopup.classList.add("visible");
-    chatToggle.textContent = "Exit Chatbot";
+    chatToggle.textContent = "Exit Grasp";
   }
 });
 
