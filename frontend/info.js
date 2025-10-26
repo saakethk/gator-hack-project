@@ -186,11 +186,16 @@ async function sendMessage() {
   appendMessage("user", message);
   userInput.value = "";
 
+  const spinner = document.getElementById("loading-indicator");
+  spinner.style.display = "block"; 
+
   try {
     const botReply = await generateBotReply(message, memory, topicName);
-    appendMessage("bot", botReply);
+    appendMessage("bot", botReply.slice(10));
   } catch (err) {
     appendMessage("bot", "Sorry, something went wrong.");
+  } finally {
+    spinner.style.display = "none"; 
   }
 }
 
