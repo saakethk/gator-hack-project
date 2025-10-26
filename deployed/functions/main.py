@@ -5,12 +5,16 @@ from firebase_functions import https_fn, scheduler_fn, options
 from firebase_admin import initialize_app
 from scraper import get_all_topics
 from excercise_generator import generate_mcqs_for_story
-from database import insert, get_sorted_topics
+from database import insert, get_sorted_topics, find_topic_by_id, find_exercise_by_id
 from chat import chatbot
+import json
 
 initialize_app()
 
-@https_fn.on_request()
+@https_fn.on_request(timeout_sec=300, memory=options.MemoryOption.GB_1, cors=options.CorsOptions(
+        cors_origins=[r"*"],
+        cors_methods=["get"],
+    ))
 def chat_request(req: https_fn.Request) -> https_fn.Response:
     query = req.args.get('query')
     topic = req.args.get('topic')
@@ -18,12 +22,43 @@ def chat_request(req: https_fn.Request) -> https_fn.Response:
     res = chatbot(user_input=query, topic=topic, history=history)
     return https_fn.Response(res)
 
-@https_fn.on_request()
+@https_fn.on_request(timeout_sec=300, memory=options.MemoryOption.GB_1, cors=options.CorsOptions(
+        cors_origins=[r"*"],
+        cors_methods=["get"],
+    ))
 def fetch_supabase_topics(req: https_fn.Request) -> https_fn.Response:
     offset = int(req.args.get('offset'))
     limit = int(req.args.get('limit'))
     res = get_sorted_topics(limit=limit, offset=offset)
-    return https_fn.Response(res)
+    return https_fn.Response(json.dumps(res).encode('utf-8'), mimetype="application/json")
+
+@https_fn.on_request(timeout_sec=300, memory=options.MemoryOption.GB_1, cors=options.CorsOptions(
+        cors_origins=[r"*"],
+        cors_methods=["get"],
+    ))
+def fetch_supabase_topic_full(req: https_fn.Request) -> https_fn.Response:
+    query = req.args.get('topic_id')
+    success, res = find_topic_by_id(id=query)
+    if not success:
+        res = {"error": "sql query failed"}
+    return https_fn.Response(json.dumps(res).encode('utf-8'), mimetype="application/json")
+
+@https_fn.on_request(timeout_sec=300, memory=options.MemoryOption.GB_1, cors=options.CorsOptions(
+        cors_origins=[r"*"],
+        cors_methods=["get"],
+    ))
+def fetch_supabase_exercise_full(req: https_fn.Request) -> https_fn.Response:
+    query = req.args.get('topic_id')
+    success, res = find_topic_by_id(id=query)
+    if success:
+        exercises = []
+        for exercise_id in res["exercises"]: # type: ignore
+            exercise = find_exercise_by_id(id=exercise_id)
+            exercises.append(exercise)
+        res = exercises
+    else:
+        res = {"error": "sql query failed"}
+    return https_fn.Response(json.dumps(res).encode('utf-8'), mimetype="application/json")
 
 @scheduler_fn.on_schedule(schedule="0 * * * *", timeout_sec=300, memory=options.MemoryOption.GB_1) # type: ignore
 def create_pipeline(event: scheduler_fn.ScheduledEvent) -> None:
