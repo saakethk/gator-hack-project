@@ -99,8 +99,6 @@ def get_current_user():
     user = SUPABASE_CLIENT.auth.get_user()
     return user
 
-#sign_up("useruserues@example.com", "password12ttttttttt3")
-add_topic_visited("2574ac1a-be84-48e7-ad02-3eaffcd71366", "dbcd3fb8-7e9c-46d4-8a49-2c8ec96922f3")
 
 
 
