@@ -55,7 +55,23 @@ def find_topic_by_name(name: str):
     #     name: Name of the topic to search for.
 
     # Returns:
-    #     List of matching topic dictionaries.
+    #     id of the topic if found, else None.
     #
     response = supabase.table("topics").select("name", "id").eq("name", name).execute()
     return response.data[0]['id'] if response.data else None
+
+def update_topic(name: str, column: str, value):
+    #
+    # Update a topic in the 'topics' table in Supabase.
+
+    # Args:
+    #     name: Name of the topic to update.
+    #     column: Name of the column to update.
+    #     value: New value for the column.
+
+    # Returns:
+    #     Response from Supabase.
+    #
+
+    response = supabase.table("topics").update({column: value}).eq("name", name).execute()
+    return response
