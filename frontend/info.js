@@ -1,56 +1,63 @@
-// --- Grab topic_id from URL ---
+// --- URL Params ---
 const params = new URLSearchParams(window.location.search);
-const conceptId = params.get("id"); // URL should be info.html?id=123
+const conceptId = params.get("id");
 const topicName = params.get("name");
 
 const memory = [];
 let exerciseDataArray = [];
 
-// --- Back button ---
+const recommenders = document.getElementById("similar");
+
+// --- Back Button ---
 document.getElementById("back-btn").addEventListener("click", () => {
   window.location.href = "index.html";
 });
 
-// --- Fetch concept data ---
+// --- Fetch Functions ---
 async function fetchConceptData(topicId) {
   try {
-    const res1 = await fetch(
-      `https://fetch-supabase-topic-full-xvt4z5lyxa-uc.a.run.app?topic_id=${topicId}`
-    );
-    if (!res1.ok) throw new Error("Network error");
-    const data = await res1.json(); // parse JSON
+    const res = await fetch(`https://fetch-supabase-topic-full-xvt4z5lyxa-uc.a.run.app?topic_id=${topicId}`);
+    if (!res.ok) throw new Error("Network error");
+    return await res.json();
+  } catch (err) {
+    console.error("Error fetching concept data:", err);
+    return null;
+  }
+}
+
+async function fetchExerciseData(topicId) {
+  try {
+    const res = await fetch(`https://fetch-supabase-exercise-full-xvt4z5lyxa-uc.a.run.app?topic_id=${topicId}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" }
+    });
+    if (!res.ok) throw new Error("Network error");
+    const data = await res.json();
+    exerciseDataArray = data;
     return data;
   } catch (err) {
-    console.error("Error fetching concept data:", err);
+    console.error("Error fetching exercise data:", err);
     return null;
   }
 }
- // fetch exercise data
-async function fetchExerciseData(topicId){
+
+async function fetchSimilarTopics(topicId, num_recs = 3) {
   try {
-    const res2 = await fetch(`https://fetch-supabase-exercise-full-xvt4z5lyxa-uc.a.run.app?topic_id=${encodeURIComponent(topicId)}`,
-      { 
-        method: "GET",
-       headers: {"Content-Type": "application/json"}
-      }
-    );
-    if (!res2.ok) throw new Error("Network error");
-    const exerciseData = await res2.json();
-    exerciseDataArray = exerciseData;
-    return exerciseData;
+    const res = await fetch(`https://fetch-recommendations-xvt4z5lyxa-uc.a.run.app?topic_id=${topicId}&num_recs=${num_recs}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" }
+    });
+    if (!res.ok) throw new Error("Network error");
+    let data = await res.json();
+    console.log(data)
+    return data
   } catch (err) {
-    console.error("Error fetching concept data:", err);
+    console.error("Error fetching recommendations:", err);
     return null;
   }
 }
 
-async function fetchSimilarTopics(topicId){
-  try{
-
-  }
-}
-
-// --- Render concept details ---
+// --- Render Functions ---
 function renderConceptDetails(data) {
   document.querySelector("h1.jersey-10-title").textContent = data.name || conceptId;
   document.getElementById("summary").textContent = data.summary || "No summary available.";
@@ -64,8 +71,12 @@ function renderConceptDetails(data) {
     : "";
 }
 
-// --- Render quiz ---
 function renderQuiz(questions) {
+  if (!Array.isArray(questions) || questions.length === 0) {
+    document.getElementById("quiz").style.display = "none";
+    return;
+  }
+
   const form = document.getElementById("mcq-form");
   const submitBtn = document.getElementById("submit-answer");
   const feedback = document.getElementById("feedback");
@@ -79,22 +90,20 @@ function renderQuiz(questions) {
     block.appendChild(p);
 
     q.answer_choices.forEach((opt, i) => {
-      const letter = String.fromCharCode(65 + i);
       const label = document.createElement("label");
       label.innerHTML = `<input type="radio" name="answer${index}" value="${i}"> ${opt}`;
       block.appendChild(label);
       block.appendChild(document.createElement("br"));
-      i = i+1
     });
 
     form.insertBefore(block, submitBtn);
   });
- 
+
   submitBtn.addEventListener("click", () => {
     let score = 0;
     questions.forEach((q, index) => {
       const selected = document.querySelector(`input[name="answer${index}"]:checked`);
-      if (Number(selected.value) === q.answer){
+      if (selected && Number(selected.value) === q.answer) {
         score++;
       }
     });
@@ -102,50 +111,63 @@ function renderQuiz(questions) {
     feedback.textContent = `You scored ${score} out of ${questions.length}`;
     feedback.style.fontWeight = "bold";
     feedback.style.marginTop = "10px";
-
-    if (score === questions.length) {
-      feedback.style.color = "green";
-    } else if (score >= questions.length / 2) {
-      feedback.style.color = "orange";
-    } else {
-      feedback.style.color = "red";
-    }
+    feedback.style.color = score === questions.length ? "green" : score >= questions.length / 2 ? "orange" : "red";
   });
 }
 
-// --- Main flow ---
+function renderRecData(rec) {
+  if (!Array.isArray(rec) || rec.length === 0) {
+    recommenders.innerHTML = "<p>No similar topics found.</p>";
+    return;
+  }
+
+  recommenders.innerHTML = "<h3>Similar Topics:</h3>";
+
+  rec.forEach(({ id, name, similarity }) => {
+    similar = Math.round(similarity * 100)
+    const link = document.createElement("a");
+    link.href = `info.html?id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}`;
+    link.className = "recommend-link";
+    link.textContent = `${name} ${similar}% Similarity`;
+
+    const wrapper = document.createElement("p");
+    wrapper.appendChild(link);
+    recommenders.appendChild(wrapper);
+  });
+}
+
+// --- Main Flow ---
 (async () => {
   if (!conceptId) return;
+
   const conceptData = await fetchConceptData(conceptId);
-  renderConceptDetails(conceptData);
-  const data = await fetchExerciseData(conceptId)
-  console.log(data)
-  if (data.length > 0) {
-    renderQuiz(data);
+  if (conceptData) renderConceptDetails(conceptData);
+
+  const exerciseData = await fetchExerciseData(conceptId);
+  if (Array.isArray(exerciseData) && exerciseData.length > 0) {
+    renderQuiz(exerciseData);
   } else {
     document.getElementById("quiz").style.display = "none";
   }
+
+  const recData = await fetchSimilarTopics(conceptId);
+  renderRecData(recData);
 })();
 
-// --- Chatbot toggle ---
+// --- Chatbot Toggle ---
 const chatToggle = document.getElementById("chat-toggle");
 const chatPopup = document.getElementById("chat-popup");
 
 chatToggle.addEventListener("click", () => {
   const isVisible = chatPopup.classList.contains("visible");
-
-  if (isVisible) {
-    chatPopup.classList.remove("visible");
-    chatPopup.classList.add("hidden");
-    chatToggle.textContent = "Confused? Our Chatbot has got you covered!";
-  } else {
-    chatPopup.classList.remove("hidden");
-    chatPopup.classList.add("visible");
-    chatToggle.textContent = "Exit Chatbot";
-  }
+  chatPopup.classList.toggle("visible", !isVisible);
+  chatPopup.classList.toggle("hidden", isVisible);
+  chatToggle.textContent = isVisible
+    ? "Confused? Our Chatbot has got you covered!"
+    : "Exit Chatbot";
 });
 
-// --- Chatbot messaging ---
+// --- Chatbot Messaging ---
 const chatWindow = document.getElementById("chat-window");
 const userInput = document.getElementById("user-input");
 const sendBtn = document.getElementById("send-btn");

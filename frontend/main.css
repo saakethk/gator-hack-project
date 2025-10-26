@@ -69,6 +69,17 @@ h1 {
   margin-bottom: 10px;
 }
 
+.recommend-link {
+  color: #0077cc;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.recommend-link:hover {
+  color: #005999;
+  text-decoration: none;
+}
+
 .question-block label {
   display: block;
   margin: 4px 0;
