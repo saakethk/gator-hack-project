@@ -5,7 +5,7 @@ from firebase_functions import https_fn, scheduler_fn, options
 from firebase_admin import initialize_app
 from scraper import get_all_topics
 from excercise_generator import generate_mcqs_for_story
-from database import insert, get_sorted_topics, find_topic_by_id, find_exercise_by_id
+from database import insert, get_sorted_topics, find_topic_by_id, find_exercise_by_id, decrement_internal_relevance_scores
 from chat import chatbot
 import json
 
@@ -62,6 +62,8 @@ def fetch_supabase_exercise_full(req: https_fn.Request) -> https_fn.Response:
 
 @scheduler_fn.on_schedule(schedule="0 * * * *", timeout_sec=300, memory=options.MemoryOption.GB_1) # type: ignore
 def create_pipeline(event: scheduler_fn.ScheduledEvent) -> None:
+    # Decrement all current topics
+    decrement_internal_relevance_scores()
     # Runs whole pipeline
     topics = get_all_topics(source_limit=5)
     # Generates questions for topics
@@ -73,4 +75,3 @@ def create_pipeline(event: scheduler_fn.ScheduledEvent) -> None:
             topic.exercises.append(exercise.id)
         dict_topic = topic.get_dict()
         insert("topics", dict_topic)
-        print(dict_topic)

@@ -108,7 +108,7 @@ def get_reddit_posts(subreddit_name: str, limit: int, exceptions: list[str]) -> 
 
 # Gets all filtered topics
 @timer
-def get_all_topics(source_limit: int = 10, exceptions: list[str] = ["reddit", 'github']) -> list[Topic]:
+def get_all_topics(source_limit: int = 10, exceptions: list[str] = ["reddit", 'github', "youtube", "nepal"]) -> list[Topic]:
     relevant_subreddits = ["programming", "coding", "learnprogramming", "creativecoding"]
     all_topics = []
     for subreddit in relevant_subreddits:
