@@ -10,7 +10,10 @@ from chat import chatbot
 
 initialize_app()
 
-@https_fn.on_request()
+@https_fn.on_request(timeout_sec=300, memory=options.MemoryOption.GB_1, cors=options.CorsOptions(
+        cors_origins=[r"*"],
+        cors_methods=["get", "post"],
+    ))
 def chat_request(req: https_fn.Request) -> https_fn.Response:
     query = req.args.get('query')
     topic = req.args.get('topic')
@@ -18,7 +21,10 @@ def chat_request(req: https_fn.Request) -> https_fn.Response:
     res = chatbot(user_input=query, topic=topic, history=history)
     return https_fn.Response(res)
 
-@https_fn.on_request()
+@https_fn.on_request(timeout_sec=300, memory=options.MemoryOption.GB_1, cors=options.CorsOptions(
+        cors_origins=[r"*"],
+        cors_methods=["get", "post"],
+    ))
 def fetch_supabase_topics(req: https_fn.Request) -> https_fn.Response:
     offset = int(req.args.get('offset'))
     limit = int(req.args.get('limit'))
