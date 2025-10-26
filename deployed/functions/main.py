@@ -6,6 +6,7 @@ from firebase_admin import initialize_app
 from scraper import get_all_topics
 from excercise_generator import generate_mcqs_for_story
 from database import insert, get_sorted_topics, find_topic_by_id, find_exercise_by_id, decrement_internal_relevance_scores
+from database import sign_up, sign_in, sign_out, get_current_user #supabase auth functions
 from chat import chatbot
 import json
 
@@ -20,6 +21,16 @@ def chat_request(req: https_fn.Request) -> https_fn.Response:
     topic = req.args.get('topic')
     history = req.args.get('history')
     res = chatbot(user_input=query, topic=topic, history=history)
+    return https_fn.Response(res)
+
+@https_fn.on_request(timeout_sec=300, memory=options.MemoryOption.GB_1, cors=options.CorsOptions(
+        cors_origins=[r"*"],
+        cors_methods=["get"],
+    ))
+def send_email_and_password(req: https_fn.Request) -> https_fn.Response:
+    email = req.args.get('email')
+    password = req.args.get('password')
+    res = sign_up(email, password) # call backend function
     return https_fn.Response(res)
 
 @https_fn.on_request(timeout_sec=300, memory=options.MemoryOption.GB_1, cors=options.CorsOptions(
