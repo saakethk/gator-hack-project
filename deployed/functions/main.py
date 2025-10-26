@@ -5,7 +5,7 @@ from firebase_functions import https_fn, scheduler_fn, options
 from firebase_admin import initialize_app
 from scraper import get_all_topics
 from excercise_generator import generate_mcqs_for_story
-from database import insert
+from database import insert, get_sorted_topics
 from chat import chatbot
 
 initialize_app()
@@ -16,6 +16,13 @@ def chat_request(req: https_fn.Request) -> https_fn.Response:
     topic = req.args.get('topic')
     history = req.args.get('history')
     res = chatbot(user_input=query, topic=topic, history=history)
+    return https_fn.Response(res)
+
+@https_fn.on_request()
+def fetch_supabase_topics(req: https_fn.Request) -> https_fn.Response:
+    offset = int(req.args.get('offset'))
+    limit = int(req.args.get('limit'))
+    res = get_sorted_topics(limit=limit, offset=offset)
     return https_fn.Response(res)
 
 @scheduler_fn.on_schedule(schedule="0 * * * *", timeout_sec=300, memory=options.MemoryOption.GB_1) # type: ignore
