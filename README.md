@@ -68,8 +68,8 @@ The idea is to create a educational website that targets the computer science do
 
 - User
     - id: str
-    - completed_exercises: str
-    - topics_visited: str
+    - completed_exercises: list[str]
+    - topics_visited: list[str]
     - date_joined: str
 
 ## Sources
