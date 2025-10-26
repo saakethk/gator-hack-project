@@ -40,6 +40,11 @@ def update_topic(id: str, column: str, value):
     response = SUPABASE_CLIENT.table("topics").update({column: value}).eq("id", id).execute()
     return response
 
+def decrement_internal_relevance_scores():
+    # Decrease all internal relevance scores by 1 using a Supabase RPC function.
+    response = SUPABASE_CLIENT.rpc("decrement_scores").execute()
+    return response
+
 def get_sorted_topics(limit: int, offset: int):
     # Get topics sorted by relevance score in descending order with pagination.
     response = SUPABASE_CLIENT.table("topics").select("name", "internal_relevance_score", "relevance_score", "date_added").order("relevance_score", desc=True).order("relevance_score", desc=True).order("date_added", desc=True).limit(limit).offset(offset).execute()
@@ -69,3 +74,4 @@ def sign_out():
 def get_current_user():
     user = SUPABASE_CLIENT.auth.get_user()
     return user
+
