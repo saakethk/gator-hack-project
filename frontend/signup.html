@@ -1,19 +1,20 @@
 <!DOCTYPE html>
     <html lang="en">
         <meta charset="UTF-8">
-        <title>Technology Summarizer</title>
+        <title>Log In/Register</title>
         <meta name="viewport" content="width=device-width,initial-scale=1" charset="UTF-8">
         <link rel="stylesheet" href="main.css">
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Jersey+10&display=swap');
         </style>
 <body>
- <h1 class="jersey-10-title">LOG IN PAGE</h1>
+ <!-- <h1 class="jersey-10-title">LOG IN PAGE</h1> -->
+  <button id="home-button" onclick="window.location.href='index.html'">
+  🏠
+  </button>
 
 
- <button id="more" class="jersey-10-title">See more?</button>
-
- <h2 class="jersey-10-title">Sign Up/Log in to save your progress!</h2>
+ <h2 class="jersey-10-title">Sign up to save your progress!</h2>
     <div id="signup-form">
       <input type="email" id="email" placeholder="Email" class="jersey-10-regular">
       <input type="password" id="password" placeholder="Password" class="jersey-10-regular">
@@ -34,15 +35,17 @@
         const status = document.getElementById("signup-status");
 
         try {
-            const res = await fetch("http://127.0.0.1:5000/signup", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
+            const res = await fetch(`https://us-central1-gator-hack-project.cloudfunctions.net/send_email_and_password/?email=${email}&password=${password}`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" }
           });
 
           const data = await res.json();
           if (res.ok) {
             status.textContent = "✅ Signed up successfully!";
+            setTimeout(() => {
+              window.location.href = "index.html";
+            }, 3000);
           } else {
             status.textContent = "❌ Error: " + data.error;
           }

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+    <html lang="en">
+        <meta charset="UTF-8">
+        <title>Log In/Register</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1" charset="UTF-8">
+        <link rel="stylesheet" href="main.css">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Jersey+10&display=swap');
+        </style>
+<body>
+  <button id="home-button" onclick="window.location.href='index.html'">
+  🏠
+  </button>
+
+
+ <h2 class="jersey-10-title">Log In!</h2>
+    <div id="signup-form">
+      <input type="email" id="email" placeholder="Email" class="jersey-10-regular">
+      <input type="password" id="password" placeholder="Password" class="jersey-10-regular">
+      <button id="signup-button" class="jersey-10-title">Log In</button>
+    </div>
+
+    <p id="signup-status" class="jersey-10-regular"></p>
+
+<script>
+  function loadConcept(name) {
+    window.location.href = `info.html?name=${encodeURIComponent(name)}`;
+  }
+
+  // Send signup request to backend
+      document.getElementById("signup-button").addEventListener("click", async () => {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const status = document.getElementById("signup-status");
+
+        try {
+            const res = await fetch(`https://us-central1-gator-hack-project.cloudfunctions.net/send_email_and_password/?email=${email}&password=${password}`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" }
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            status.textContent = "✅ Logged in successfully!";
+            setTimeout(() => {
+              window.location.href = "index.html";
+            }, 3000);
+          } else {
+            status.textContent = "❌ Error: " + data.error;
+          }
+        } catch (err) {
+          status.textContent = "❌ Failed to connect to server.";
+        }
+      });
+</script>
+</body>
+
+    </html> 

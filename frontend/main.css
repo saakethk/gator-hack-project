@@ -394,3 +394,130 @@ button:hover {
   font-family: "Jersey 10", sans-serif;
   color: navy;
 }
+
+/* ============================= */
+/* Login Button Styling          */
+/* ============================= */
+
+header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 15px 25px;
+}
+
+ /* Top bar */
+#top-bar {
+  display: flex;
+  justify-content: flex-end; /* Align buttons to the right */
+  gap: 15px;                /* Space between buttons */
+  padding: 20px;
+  position: absolute;       /* Put it at the top */
+  top: 0;
+  right: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Make both buttons the same height */
+#login-button, #signup-button {
+  font-size: 20px;
+  padding: 10px 25px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: "Jersey 10", sans-serif;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Login button style */
+#login-button {
+  background-color: white;
+  color: navy;
+  border: 2px solid navy;
+}
+
+#login-button:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+/* Sign Up button style */
+#signup-button {
+  background-color: #FF7900;
+  color: white;
+  border: none;
+}
+
+#signup-button:hover {
+  background-color: #e56d00;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+
+/* #login-button:hover {
+  background-color: #e56d00;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}  */
+
+ #login-buttonTEST {
+  position: fixed;
+  top: 20px;
+  right: 25px;
+  background-color: #FF7900;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-size: 26px;
+  font-family: "Jersey 10", sans-serif;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  z-index: 1000; /* ensures it stays above other elements */
+}
+
+#home-button {
+  position: fixed;
+  top: 20px;
+  left: 25px;
+  /* background-color: #FF7900; */
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 26px;
+  font-family: "Jersey 10", sans-serif;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  z-index: 1000;
+}
+
+#home-button:hover {
+  background-color: #e56d00;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+/* Sign Up Button
+#signup-button {
+  background-color: #cac9c8;
+  color: rgb(5, 0, 0);
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 24px;
+  font-family: "Jersey 10", sans-serif;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#signup-button:hover {
+  background-color: #f9f8f8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+} */
+
+
+
