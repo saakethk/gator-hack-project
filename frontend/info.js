@@ -48,9 +48,7 @@ async function fetchSimilarTopics(topicId, num_recs = 3) {
       headers: { "Content-Type": "application/json" }
     });
     if (!res.ok) throw new Error("Network error");
-    let data = await res.json();
-    console.log(data)
-    return data
+    return await res.json();
   } catch (err) {
     console.error("Error fetching recommendations:", err);
     return null;
@@ -124,7 +122,7 @@ function renderRecData(rec) {
   recommenders.innerHTML = "<h3>Similar Topics:</h3>";
 
   rec.forEach(({ id, name, similarity }) => {
-    similar = Math.round(similarity * 100)
+    const similar = Math.round(similarity * 100);
     const link = document.createElement("a");
     link.href = `info.html?id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}`;
     link.className = "recommend-link";
@@ -171,6 +169,7 @@ chatToggle.addEventListener("click", () => {
 const chatWindow = document.getElementById("chat-window");
 const userInput = document.getElementById("user-input");
 const sendBtn = document.getElementById("send-btn");
+const loadingIndicator = document.getElementById("loading-indicator");
 
 sendBtn.addEventListener("click", sendMessage);
 userInput.addEventListener("keypress", (e) => {
@@ -184,10 +183,16 @@ async function sendMessage() {
   appendMessage("user", message);
   userInput.value = "";
 
-  setTimeout(async () => {
+  loadingIndicator.style.display = "block";
+
+  try {
     const botReply = await generateBotReply(message, memory, topicName);
     appendMessage("bot", botReply);
-  }, 500);
+  } catch (err) {
+    appendMessage("bot", "Sorry, something went wrong.");
+  } finally {
+    loadingIndicator.style.display = "none";
+  }
 }
 
 function appendMessage(sender, text) {

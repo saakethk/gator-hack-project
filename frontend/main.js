@@ -40,13 +40,13 @@ const displayConcepts = (data) => {
     btn.className = "jersey-10-title concept-btn multi-line-button";
     const date = date_added ? date_added.slice(0, 10) : "";
 
-    if (internal_relevance_score >= 5) {
+    if (internal_relevance_score >= 1) {
       btn.style.borderColor = "#ffa657ff";
       btn.innerHTML = `${name}:<br> Trending 🔥 ${date}`;
     } else if (internal_relevance_score >= 0) {
       btn.style.borderColor = "#9dc183";
       btn.style.backgroundColor = "#eafbe3ff"
-      btn.innerHTML = `${name}:<br> Good 😊 ${date}`;
+      btn.innerHTML = `${name}:<br> Relevant 😊 ${date}`;
     } else {
       btn.style.borderColor = "#90d5ff";
       btn.style.backgroundColor = "#F0F8FF"
