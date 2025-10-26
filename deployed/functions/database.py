@@ -9,16 +9,16 @@ load_dotenv()
 def add_topic_visited(user_id: str, topic_id: str):
     #Fetching topic_visited
     response = SUPABASE_CLIENT.table("sensitive_info").select("id", "topics_visited").eq("id", user_id).execute()
-    topics_visited = response.data[0]["topics_visited"]
-    topics_visited.append(topic_id)
+    topics_visited = response.data[0]["topics_visited"] # type: ignore
+    topics_visited.append(topic_id) # type: ignore
     response = SUPABASE_CLIENT.table("sensitive_info").update({"topics_visited": topics_visited}).eq("id", user_id).execute()
     return response
 
 def add_completed_exercise(user_id: str, exercise_id: str):
     #Fetching completed_exercises
     response = SUPABASE_CLIENT.table("sensitive_info").select("id", "completed_exercises").eq("id", user_id).execute()
-    completed_exercises = response.data[0]["completed_exercises"]
-    completed_exercises.append(exercise_id)
+    completed_exercises = response.data[0]["completed_exercises"] # type: ignore
+    completed_exercises.append(exercise_id) # type: ignore
     response = SUPABASE_CLIENT.table("sensitive_info").update({"completed_exercises": completed_exercises}).eq("id", user_id).execute()
     return response
 
@@ -61,7 +61,7 @@ def find_topic_by_id(id: str):
     
 def find_exercise_by_id(id: str):
     # Search for a topic by id in the 'topics' table in Supabase.
-    response = SUPABASE_CLIENT.table("exercise").select("id", "*").eq("id", id).execute()
+    response = SUPABASE_CLIENT.table("generated_questions").select("id", "*").eq("id", id).execute()
     if response.data:
         return True, response.data[0] # type: ignore
     else:
@@ -92,15 +92,15 @@ def sign_up(email: str, password: str):
     })
 
     SUPABASE_CLIENT.table("sensitive_info").insert({
-        "id": auth_response.user.id,
-        "date_joined": auth_response.user.created_at.isoformat(),
+        "id": auth_response.user.id, # type: ignore
+        "date_joined": auth_response.user.created_at.isoformat(), # type: ignore
         "topics_visited": [],
         "completed_exercises": []
     }).execute()
     return auth_response
 
 def sign_in(email: str, password: str):
-    auth_response = SUPABASE_CLIENT.auth.sign_in({
+    auth_response = SUPABASE_CLIENT.auth.sign_in({ # type: ignore
         "email": email,
         "password": password
     })

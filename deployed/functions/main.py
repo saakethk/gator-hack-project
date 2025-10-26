@@ -7,6 +7,7 @@ from scraper import get_all_topics
 from excercise_generator import generate_mcqs_for_story
 from database import insert, get_sorted_topics, find_topic_by_id, find_exercise_by_id, decrement_internal_relevance_scores
 from chat import chatbot
+from recommender import recommender
 import json
 
 initialize_app()
@@ -27,8 +28,8 @@ def chat_request(req: https_fn.Request) -> https_fn.Response:
         cors_methods=["get"],
     ))
 def fetch_supabase_topics(req: https_fn.Request) -> https_fn.Response:
-    offset = int(req.args.get('offset'))
-    limit = int(req.args.get('limit'))
+    offset = int(req.args.get('offset')) # type: ignore
+    limit = int(req.args.get('limit')) # type: ignore
     res = get_sorted_topics(limit=limit, offset=offset)
     return https_fn.Response(json.dumps(res).encode('utf-8'), mimetype="application/json")
 
@@ -38,7 +39,7 @@ def fetch_supabase_topics(req: https_fn.Request) -> https_fn.Response:
     ))
 def fetch_supabase_topic_full(req: https_fn.Request) -> https_fn.Response:
     query = req.args.get('topic_id')
-    success, res = find_topic_by_id(id=query)
+    success, res = find_topic_by_id(id=query) # type: ignore
     if not success:
         res = {"error": "sql query failed"}
     return https_fn.Response(json.dumps(res).encode('utf-8'), mimetype="application/json")
@@ -49,13 +50,29 @@ def fetch_supabase_topic_full(req: https_fn.Request) -> https_fn.Response:
     ))
 def fetch_supabase_exercise_full(req: https_fn.Request) -> https_fn.Response:
     query = req.args.get('topic_id')
-    success, res = find_topic_by_id(id=query)
+    success, res = find_topic_by_id(id=query) # type: ignore
     if success:
         exercises = []
-        for exercise_id in res["exercises"]: # type: ignore
-            exercise = find_exercise_by_id(id=exercise_id)
-            exercises.append(exercise)
+        for exercise_id in set(res["exercises"]): # type: ignore
+            exercise_success, exercise = find_exercise_by_id(id=exercise_id)
+            if exercise_success:
+                exercises.append(exercise)
         res = exercises
+    else:
+        res = {"error": "sql query failed"}
+    return https_fn.Response(json.dumps(res).encode('utf-8'), mimetype="application/json")
+
+@https_fn.on_request(timeout_sec=300, memory=options.MemoryOption.GB_1, cors=options.CorsOptions(
+        cors_origins=[r"*"],
+        cors_methods=["get"],
+    ))
+def fetch_recommendations(req: https_fn.Request) -> https_fn.Response:
+    query = req.args.get('topic_id')
+    num_recs = req.args.get('num_recs')
+    success, res = find_topic_by_id(id=query) # type: ignore
+    if success:
+        topic_name = res["name"] # type: ignore
+        res = recommender(base_topic=topic_name, num_results=num_recs) # type: ignore
     else:
         res = {"error": "sql query failed"}
     return https_fn.Response(json.dumps(res).encode('utf-8'), mimetype="application/json")
@@ -68,10 +85,9 @@ def create_pipeline(event: scheduler_fn.ScheduledEvent) -> None:
     topics = get_all_topics(source_limit=5)
     # Generates questions for topics
     for topic in topics:
-        exercises = generate_mcqs_for_story(topic, num=1)
+        exercises = generate_mcqs_for_story(topic, num=3)
         for exercise in exercises:
             exercise_dict = exercise.to_dict()
             insert("generated_questions", exercise_dict)
-            topic.exercises.append(exercise.id)
         dict_topic = topic.get_dict()
         insert("topics", dict_topic)

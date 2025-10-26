@@ -45,6 +45,8 @@ def prompt_about_url(prompt: str, url: str) -> str:
     context_response = requests.get(url)
     soup = BeautifulSoup(context_response.text, 'html.parser')
     condensed_content = " ".join(soup.text.split())
+    if len(condensed_content) > 3000:
+        condensed_content = condensed_content[:3000]
     response = NAVIGATOR_CLIENT.complete(
         prompt=f"Website context: {condensed_content}. Utilize the website content above for the provided prompt. Prompt: {prompt}")
     return str(response)

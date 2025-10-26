@@ -118,19 +118,20 @@ def generate_mcqs_for_story(topic: Topic, num: int = 3):
    except Exception as e:
        return []
 
-def test_question():
-   topics = get_all_topics(source_limit=2)
-   for topic in topics:
-       exercises = generate_mcqs_for_story(topic, num=1)
+# def test_question():
+#    topics = get_all_topics(source_limit=2)
+#    for topic in topics:
+#        exercises = generate_mcqs_for_story(topic, num=1)
 
-       if exercises:
-           exercise = exercises[0]
-           print(f"QUESTION GENERATED:")
-           print(f"Q: {exercise.question}")
-           for choice in exercise.answer_choices:
-               print(f"  {choice}")
-           print(f"Correct Answer: {exercise.answer}")
-       else:
-           print("Failed to generate MCQ for this topic")
+#        if exercises:
+#            exercise = exercises
+#            print(exercises)
+#            print(f"QUESTION GENERATED:")
+#            print(f"Q: {exercise.question}")
+#            for choice in exercise.answer_choices:
+#                print(f"  {choice}")
+#            print(f"Correct Answer: {exercise.answer}")
+#        else:
+#            print("Failed to generate MCQ for this topic")
 
 # test_question()
